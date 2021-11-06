@@ -12,18 +12,17 @@ numpy = "^1.21.3"
 plotly = "^5.3.1"
 
 mlflow = "^1.21.0"
+sklearn = ">= 0.1.0"
 
+PyYAML = "^6.0"
+pyarrow = "^6.0.0"
+
+
+python-dotenv = "^0.19.1"
 
 azure-storage-blob = "== 12.7.1"
 azure-identity ="*"
 #cryptography = "^35.0.0"   # aus irgentwelchen gruenden ist das auf ubuntu20.04 gerade nicht möglich
-
-PyYAML = "^6.0"
-pyarrow = "^6.0.0"
-sklearn = "*"
-
-python-dotenv = "^0.19.1"
-
 
 
 [tool.poetry.dev-dependencies]

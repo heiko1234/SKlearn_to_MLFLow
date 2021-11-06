@@ -2,8 +2,8 @@
 
 # Time shifted data
 
-data_load: "/home/heiko/Repos/LDopa/data/Filtered_Data.parquet"
-data_save: "/home/heiko/Repos/LDopa/data/Filtered_Data2.parquet"
+data_load: "/home/heiko/Repos/SKLearn_to_MLFlow/data/Filtered_Data.parquet"
+data_save: "/home/heiko/Repos/SKLearn_to_MLFlow/data/Filtered_Data2.parquet"
 
 
 ###########
