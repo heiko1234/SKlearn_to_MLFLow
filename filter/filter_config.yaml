@@ -1,0 +1,37 @@
+
+
+# Time shifted data
+
+data_load: "/home/heiko/Repos/LDopa/data/Filtered_Data.parquet"
+data_save: "/home/heiko/Repos/LDopa/data/Filtered_Data2.parquet"
+
+
+###########
+# Target: #
+###########
+
+target:
+  - "Yield"
+
+
+DateTime:
+  - "Date/Time"
+
+
+RawData_Filter:
+  # for shifted data
+  # - "Column name <= / == / >= any_value"
+  - "BiologicalMaterial03 >= 50"
+
+
+
+Time_exclude_Filter: 
+  # Exclude the time periode between both Dates
+  # #Year-Month-Day HH:MM, Year-Month-Day HH:MM
+  - "2021-06-01 12:00, 2021-06-15 00:00"
+
+
+
+
+
+

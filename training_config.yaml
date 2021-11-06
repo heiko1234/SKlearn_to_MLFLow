@@ -1,0 +1,67 @@
+# Trainings_config.yaml
+
+
+data_load: "/home/heiko/Repos/LDopa/data/Filtered_Data.parquet"
+
+
+
+###########
+# Target: #
+###########
+
+
+target: "Yield"
+
+features:
+  - "ManufacturingProcess09"
+  - "ManufacturingProcess32"
+  - "ManufacturingProcess13"
+  - "BiologicalMaterial02"
+  - "ManufacturingProcess20"
+  - "ManufacturingProcess22"
+
+
+
+MLFlow: True # False #True
+
+MLFlow_Experiment: "Test_Thing2"
+
+
+test_split:
+  test_size: 0.2
+  random_state: 2021
+
+
+
+Model:
+  #- "Lin_Reg"
+  - "Ridge"
+  - "RandomForestRegressor"
+  #- "DecisionTreeRegressor"
+
+
+Ridge:
+  - "alpha": 0.6
+
+
+RandomForestRegressor:
+  - "n_estimators": 150
+  - "max_features": 2
+  - "bootstrap":  True
+
+
+DecisionTreeRegressor:
+  - "max_depth": 10
+  #- "min_sample_split": 10
+  - "min_samples_leaf": 4
+
+
+Scaler:
+  #- "None"
+  - "MinMax"
+  #- "Standard"
+
+
+
+
+
