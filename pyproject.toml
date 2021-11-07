@@ -12,24 +12,21 @@ numpy = "^1.21.3"
 plotly = "^5.3.1"
 
 mlflow = "^1.21.0"
-sklearn = ">= 0.1.0"
+azure-storage-blob = "==12.7.1"
+azure-identity ="^1.7.0"
 
 PyYAML = "^6.0"
 pyarrow = "^6.0.0"
-
+sklearn = ">=0.0"
 
 python-dotenv = "^0.19.1"
 
-azure-storage-blob = "== 12.7.1"
-azure-identity ="*"
-#cryptography = "^35.0.0"   # aus irgentwelchen gruenden ist das auf ubuntu20.04 gerade nicht möglich
-
 
 [tool.poetry.dev-dependencies]
-black = "*"
-flake8 = "*"
-isort = "*"
-pre-commit = "*"
+black = "^21.10b0"
+flake8 = "^4.0.1"
+isort = "^5.8.0"
+pre-commit = "^2.12.1"
 
 
 [tool.black]

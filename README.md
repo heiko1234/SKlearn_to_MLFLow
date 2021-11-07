@@ -12,6 +12,8 @@ python3 -m venv .venv
 
 # switch manually to virtual environment and then
 
+$(.venv) pip install poetry
+
 $(.venv) poetry install 
 # will install all dependencies from the pyproject.toml file
 
