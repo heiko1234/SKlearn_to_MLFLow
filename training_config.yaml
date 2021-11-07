@@ -24,7 +24,7 @@ features:
 
 MLFlow: True # False #True
 
-MLFlow_Experiment: "Test_Thing2"
+MLFlow_Experiment: "SKlearn_to_MLFlow"
 
 
 test_split:
