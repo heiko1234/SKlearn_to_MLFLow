@@ -87,8 +87,8 @@ def replace_infs(df, with_value=np.nan):
     return df.replace(to_replace, with_value)
 
 
-def drop_nans(df, axis=0):
-
+def drop_nans(df: pd.DataFrame, axis=0):
+    
     return df.dropna(axis)
 
 
@@ -347,8 +347,15 @@ def main(data):
 
 if __name__ == "__main__":
 
+    path = Path(__file__).parent
+    path_data = os.path.join(path, "data/Filtered_Data2.parquet")
+
+    # hard coded path
+    # path_data = "/home/heiko/Repos/SKlearn_to_MLFLow/data/Filtered_Data2.parquet"
+
+
     data = pd.read_parquet(
-        "/home/heiko/Repos/general_workflow/data/Filtered_Data2.parquet"
+        path_data
     )
 
     main(data)
