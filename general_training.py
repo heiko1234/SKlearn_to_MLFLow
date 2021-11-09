@@ -33,6 +33,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Ridge
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import AdaBoostRegressor
 
 from dotenv import load_dotenv
 
@@ -54,7 +55,10 @@ sklearn_models_dict = {
     "RandomForestRegressor": RandomForestRegressor(),
     "Lin_Reg": LinearRegression(),
     "Ridge": Ridge(),
+    "AdaBoostRegressor": AdaBoostRegressor()
 }
+
+
 
 
 scaler_dict = {
@@ -166,18 +170,29 @@ def evaluate(sk_model, x_test, y_test, MLFLow=False):
         mlflow.log_metric("eval_kfold", eval_kfold)
 
 
-def make_model_pipeline(sk_model, scaler=None, parameter=None):
+def make_model_pipeline(sk_model, sk_model2=None, scaler=None, parameter_model=None, parameter_model2=None):
 
-    if parameter:
+    if sk_model2 != None:
+        sk_model_out = sk_model
+        sk_model_out.base_estimator=sk_model2
 
-        sk_model = sk_model
-        sk_model.set_params(**parameter)
+        sk_model_out.base_estimator.set_params(**parameter_model2)
+        sk_model_out.set_params(**parameter_model)
 
-    if scaler is not None:
-        return Pipeline(steps=[("scaler", scaler), ("model", sk_model)])
+        print("sk_model_out was initialized and parametrized")
 
     else:
-        return sk_model
+
+        sk_model_out = sk_model
+        sk_model_out.set_params(**parameter_model)
+    
+
+    if scaler is not None:
+        return Pipeline(steps=[("scaler", scaler), ("model", sk_model_out)])
+
+    else:
+        return sk_model_out
+
 
 
 def create_data_dict(data):
@@ -199,19 +214,58 @@ def create_dict_of_modelparameter(model_parameter):
     return output
 
 
+def create_dict_of_EnsembledModel(configuration, model):
+    output = {}
+    for model_dict in configuration[model]:
+        for key in model_dict.keys():
+            output[key] = create_dict_of_modelparameter(model_dict[key])
+    return output
+
+
+def flatten_list(list_list):
+    flat_list = []
+
+    for element in list_list:
+        if type(element) is list:
+            for item in element:
+                flat_list.append(item)
+        else:
+            flat_list.append(element)
+    return flat_list
+
+
+def keys_in_list_of_dicts(list_of_dicts):
+    output=[]
+    for element in list_of_dicts:
+        output.append(list(element.keys())[0])
+    return output
+
+
+def convert_list_to_dict(list_of_dicts):
+    output={}
+    keys = keys_in_list_of_dicts(list_of_dicts)
+    for count, value in enumerate(keys):
+        output[keys[count]]= list_of_dicts[count][keys[count]]
+    return output
+
+
+
 def main(data):
+
+    output={}
 
     path = Path(__file__).parent
     configuration = read_configuration(
         configuration_file_path=os.path.join(path, "training_config.yaml")
     )
 
-    # configuration = read_configuration(configuration_file_path=
-    # "/home/heiko/Repos/general_workflow/training_config.yaml")
+    #configuration = read_configuration(configuration_file_path="/home/heiko/Repos/SKlearn_to_MLFLow/training_config.yaml")
     # configuration
 
     MLFlow = configuration["MLFlow"]
     print(f"MLFlow: {MLFlow}")
+
+    MLFlow = False
 
     features = configuration["features"]
     target = configuration["target"]
@@ -279,7 +333,7 @@ def main(data):
             model_pipe = make_model_pipeline(
                 sk_model=sklearn_models_dict[model],
                 scaler=scaler_dict[scaler],
-                parameter=model_parameter_dict,
+                parameter_model=model_parameter_dict,
             )
 
             if MLFlow:
@@ -343,6 +397,92 @@ def main(data):
                     y_test=target_test,
                     MLFLow=False,
                 )
+                output[model] = model_pipe
+
+    for model in keys_in_list_of_dicts(list_of_dicts = configuration["EnsembledModel"]):
+
+        dict_models= convert_list_to_dict(list_of_dicts = configuration["EnsembledModel_Parameter"])
+
+        for scaler in configuration["Scaler"]:
+            print(f"Used scaler: {scaler} ")
+
+
+            dict_enmodel = convert_list_to_dict(dict_models[model])
+            keys_of_enmodel = keys_in_list_of_dicts(dict_models[model])
+
+
+            make_model_pipeline(sk_model = sklearn_models_dict[keys_of_enmodel[0]], 
+                                sk_model2=sklearn_models_dict[keys_of_enmodel[1]], 
+                                scaler=scaler_dict[scaler], 
+                                parameter_model=create_dict_of_modelparameter(model_parameter = dict_enmodel[keys_of_enmodel[0]]), 
+                                parameter_model2=create_dict_of_modelparameter(model_parameter = dict_enmodel[keys_of_enmodel[1]])
+                                )
+
+            if MLFlow:
+
+                mlflow.set_experiment(configuration["MLFlow_Experiment"])
+
+                with mlflow.start_run():
+
+                    print("Model run: ", mlflow.active_run().info.run_uuid)
+
+                    print("Training and Evaluation for MLFlow started.")
+
+                    training(
+                        sk_model=model_pipe,
+                        x_train=features_train,
+                        y_train=target_train,
+                        MLFlow=True,
+                    )
+                    evaluate(
+                        sk_model=model_pipe,
+                        x_test=features_test,
+                        y_test=target_test,
+                        MLFLow=True,
+                    )
+
+                    print("starting to track artifacts in MLFlow.")
+
+                    mlflow.sklearn.log_model(
+                        model_pipe, "model", signature=signature
+                    )
+
+                    mlflow.set_tag("model_type", model)
+
+                    mlflow.set_tag("target", configuration["target"])
+                    mlflow.set_tag("features", configuration["features"])
+
+                    mlflow.set_tag("model_parameters", model_parameter_dict)
+
+                    mlflow.log_dict(
+                        data_minmax_dict, "model/feature_limits.json"
+                    )
+                    mlflow.log_dict(
+                        model_parameter_dict, "model/model_parameters.json"
+                    )
+
+                mlflow.end_run()
+
+            else:
+                model_pipe.fit(features_train, target_train)
+                model_pipe.score(features_test, target_test)
+
+                training(
+                    sk_model=model_pipe,
+                    x_train=features_train,
+                    y_train=target_train,
+                    MLFlow=False,
+                )
+                evaluate(
+                    sk_model=model_pipe,
+                    x_test=features_test,
+                    y_test=target_test,
+                    MLFLow=False,
+                )
+                output[model] = model_pipe
+
+
+
 
 
 if __name__ == "__main__":
@@ -359,3 +499,6 @@ if __name__ == "__main__":
     )
 
     main(data)
+
+
+

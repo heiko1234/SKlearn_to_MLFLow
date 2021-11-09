@@ -39,6 +39,14 @@ Model:
   - "RandomForestRegressor"
   #- "DecisionTreeRegressor"
 
+EnsembledModel:
+  - AdaboostRegression:
+    - "AdaBoostRegressor"
+    - "DecisionTreeRegressor"
+  - Adabooo:
+    - AdaBoostRegressor"
+    - "DecisionTreeRegressor"
+
 
 Ridge:
   - "alpha": 0.6
@@ -56,9 +64,28 @@ DecisionTreeRegressor:
   - "min_samples_leaf": 4
 
 
+EnsembledModel_Parameter:
+  - AdaboostRegression:
+    - AdaBoostRegressor: 
+      - n_estimators: 130
+      - learning_rate: 0.05
+    - DecisionTreeRegressor:
+      - max_leaf_nodes: 200
+      - min_samples_split: 50
+  - Adabooo:
+    - AdaBoostRegressor: 
+      - n_estimators: 130
+      - learning_rate: 0.05
+    - DecisionTreeRegressor:
+      - max_leaf_nodes: 200
+      - min_samples_split: 50
+
+
+
+
 Scaler:
-  #- "None"
-  - "MinMax"
+  - "None"
+  #- "MinMax"
   #- "Standard"
 
 
