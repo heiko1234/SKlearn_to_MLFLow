@@ -265,7 +265,7 @@ def main(data):
     MLFlow = configuration["MLFlow"]
     print(f"MLFlow: {MLFlow}")
 
-    MLFlow = False
+    #MLFlow = False
 
     features = configuration["features"]
     target = configuration["target"]
@@ -401,85 +401,93 @@ def main(data):
 
     for model in keys_in_list_of_dicts(list_of_dicts = configuration["EnsembledModel"]):
 
+        print(f"Used Ensemble Model: {model}")
+
         dict_models= convert_list_to_dict(list_of_dicts = configuration["EnsembledModel_Parameter"])
 
         for scaler in configuration["Scaler"]:
             print(f"Used scaler: {scaler} ")
 
+            try: 
 
-            dict_enmodel = convert_list_to_dict(dict_models[model])
-            keys_of_enmodel = keys_in_list_of_dicts(dict_models[model])
+                dict_enmodel = convert_list_to_dict(dict_models[model])
+                keys_of_enmodel = keys_in_list_of_dicts(dict_models[model])
 
 
-            make_model_pipeline(sk_model = sklearn_models_dict[keys_of_enmodel[0]], 
-                                sk_model2=sklearn_models_dict[keys_of_enmodel[1]], 
-                                scaler=scaler_dict[scaler], 
-                                parameter_model=create_dict_of_modelparameter(model_parameter = dict_enmodel[keys_of_enmodel[0]]), 
-                                parameter_model2=create_dict_of_modelparameter(model_parameter = dict_enmodel[keys_of_enmodel[1]])
-                                )
+                make_model_pipeline(sk_model = sklearn_models_dict[keys_of_enmodel[0]], 
+                                    sk_model2=sklearn_models_dict[keys_of_enmodel[1]], 
+                                    scaler=scaler_dict[scaler], 
+                                    parameter_model=create_dict_of_modelparameter(model_parameter = dict_enmodel[keys_of_enmodel[0]]), 
+                                    parameter_model2=create_dict_of_modelparameter(model_parameter = dict_enmodel[keys_of_enmodel[1]])
+                                    )
 
-            if MLFlow:
+                if MLFlow:
 
-                mlflow.set_experiment(configuration["MLFlow_Experiment"])
+                    mlflow.set_experiment(configuration["MLFlow_Experiment"])
 
-                with mlflow.start_run():
+                    with mlflow.start_run():
 
-                    print("Model run: ", mlflow.active_run().info.run_uuid)
+                        print("Model run: ", mlflow.active_run().info.run_uuid)
 
-                    print("Training and Evaluation for MLFlow started.")
+                        print("Training and Evaluation for MLFlow started.")
+
+                        training(
+                            sk_model=model_pipe,
+                            x_train=features_train,
+                            y_train=target_train,
+                            MLFlow=True,
+                        )
+                        evaluate(
+                            sk_model=model_pipe,
+                            x_test=features_test,
+                            y_test=target_test,
+                            MLFLow=True,
+                        )
+
+                        print("starting to track artifacts in MLFlow.")
+
+                        mlflow.sklearn.log_model(
+                            model_pipe, "model", signature=signature
+                        )
+
+                        mlflow.set_tag("model_type", model)
+
+                        mlflow.set_tag("target", configuration["target"])
+                        mlflow.set_tag("features", configuration["features"])
+
+                        mlflow.set_tag("model_parameters", model_parameter_dict)
+
+                        mlflow.log_dict(
+                            data_minmax_dict, "model/feature_limits.json"
+                        )
+                        mlflow.log_dict(
+                            model_parameter_dict, "model/model_parameters.json"
+                        )
+
+                    mlflow.end_run()
+
+                else:
+                    model_pipe.fit(features_train, target_train)
+                    model_pipe.score(features_test, target_test)
 
                     training(
                         sk_model=model_pipe,
                         x_train=features_train,
                         y_train=target_train,
-                        MLFlow=True,
+                        MLFlow=False,
                     )
                     evaluate(
                         sk_model=model_pipe,
                         x_test=features_test,
                         y_test=target_test,
-                        MLFLow=True,
+                        MLFLow=False,
                     )
+                    output[model] = model_pipe
+            
+            except NameError or ValueError:
+                pass
 
-                    print("starting to track artifacts in MLFlow.")
-
-                    mlflow.sklearn.log_model(
-                        model_pipe, "model", signature=signature
-                    )
-
-                    mlflow.set_tag("model_type", model)
-
-                    mlflow.set_tag("target", configuration["target"])
-                    mlflow.set_tag("features", configuration["features"])
-
-                    mlflow.set_tag("model_parameters", model_parameter_dict)
-
-                    mlflow.log_dict(
-                        data_minmax_dict, "model/feature_limits.json"
-                    )
-                    mlflow.log_dict(
-                        model_parameter_dict, "model/model_parameters.json"
-                    )
-
-                mlflow.end_run()
-
-            else:
-                model_pipe.fit(features_train, target_train)
-                model_pipe.score(features_test, target_test)
-
-                training(
-                    sk_model=model_pipe,
-                    x_train=features_train,
-                    y_train=target_train,
-                    MLFlow=False,
-                )
-                evaluate(
-                    sk_model=model_pipe,
-                    x_test=features_test,
-                    y_test=target_test,
-                    MLFLow=False,
-                )
-                output[model] = model_pipe
+    return output
 
 
 
