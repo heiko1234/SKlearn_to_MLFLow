@@ -503,7 +503,7 @@ def main(data):
             except NameError or ValueError:
                 pass
     
-    if not MFLOW:
+    if not MLFLOW:
         return output
 
 
@@ -524,7 +524,7 @@ if __name__ == "__main__":
 
     else: 
 
-        path_dat = OS.GETENV("DATA_PATH", "/data/Filtered_Data2.parquet")
+        path_dat = os.GETENV("DATA_PATH", "/data/Filtered_Data2.parquet")
 
     data = pd.read_parquet(
         path_data
