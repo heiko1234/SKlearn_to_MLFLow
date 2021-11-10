@@ -43,9 +43,7 @@ EnsembledModel:
   - AdaboostRegression:
     - "AdaBoostRegressor"
     - "DecisionTreeRegressor"
-  - Adabooo:
-    - AdaBoostRegressor"
-    - "DecisionTreeRegressor"
+
 
 
 Ridge:
@@ -72,21 +70,15 @@ EnsembledModel_Parameter:
     - DecisionTreeRegressor:
       - max_leaf_nodes: 200
       - min_samples_split: 50
-  - Adabooo:
-    - AdaBoostRegressor: 
-      - n_estimators: 130
-      - learning_rate: 0.05
-    - DecisionTreeRegressor:
-      - max_leaf_nodes: 200
-      - min_samples_split: 50
+
 
 
 
 
 Scaler:
-  # - "None"
+  - "None"
   - "MinMax"
-  #- "Standard"
+  - "Standard"
 
 
 

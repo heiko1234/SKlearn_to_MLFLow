@@ -148,8 +148,9 @@ def training(sk_model, x_train, y_train, MLFlow=False):
         mlflow.log_metric("train_score", train_score)
 
 
-def evaluate(sk_model, x_test, y_test, MLFLow=False):
+def evaluate(sk_model, x_test, y_test, x_train, y_train, MLFLow=False):
     eval_score = round(sk_model.score(x_test, y_test), 4)
+    eval_score_train = round(sk_model.score(x_train, y_train), 4)
     eval_nmse = mean_squared_error(
         y_true=y_test, y_pred=sk_model.predict(x_test), squared=False
     )
@@ -164,6 +165,7 @@ def evaluate(sk_model, x_test, y_test, MLFLow=False):
     print(f"Evaluation Score: {eval_score}")
 
     if MLFLow:
+        mlflow.log_metric("eval_score_train", eval_score_train)
         mlflow.log_metric("eval_score", eval_score)
         mlflow.log_metric("eval_nmse", eval_nmse)
         mlflow.log_metric("eval_r2", eval_r2)
@@ -179,13 +181,17 @@ def make_model_pipeline(sk_model, sk_model2=None, scaler=None, parameter_model=N
         sk_model_out.base_estimator.set_params(**parameter_model2)
         sk_model_out.set_params(**parameter_model)
 
-        print("sk_model_out was initialized and parametrized")
+        
 
-    else:
+    elif parameter_model != None:
 
         sk_model_out = sk_model
         sk_model_out.set_params(**parameter_model)
     
+    else:
+        sk_model_out = sk_model
+    
+    print(f"{sk_model_out} was created")
 
     if scaler is not None:
         return Pipeline(steps=[("scaler", scaler), ("model", sk_model_out)])
@@ -356,6 +362,8 @@ def main(data):
                         sk_model=model_pipe,
                         x_test=features_test,
                         y_test=target_test,
+                        x_train=features_train,
+                        y_train=target_train,
                         MLFLow=True,
                     )
 
@@ -366,6 +374,7 @@ def main(data):
                     )
 
                     mlflow.set_tag("model_type", model)
+                    mlflow.set_tag("scaler", scaler)
 
                     mlflow.set_tag("target", configuration["target"])
                     mlflow.set_tag("features", configuration["features"])
@@ -395,6 +404,8 @@ def main(data):
                     sk_model=model_pipe,
                     x_test=features_test,
                     y_test=target_test,
+                    x_train=features_train,
+                    y_train=target_train,
                     MLFLow=False,
                 )
                 output[model] = model_pipe
@@ -441,6 +452,8 @@ def main(data):
                             sk_model=model_pipe,
                             x_test=features_test,
                             y_test=target_test,
+                            x_train=features_train,
+                            y_train=target_train,
                             MLFLow=True,
                         )
 
@@ -451,6 +464,7 @@ def main(data):
                         )
 
                         mlflow.set_tag("model_type", model)
+                        mlflow.set_tag("scaler", scaler)
 
                         mlflow.set_tag("target", configuration["target"])
                         mlflow.set_tag("features", configuration["features"])
@@ -480,14 +494,17 @@ def main(data):
                         sk_model=model_pipe,
                         x_test=features_test,
                         y_test=target_test,
+                        x_train=features_train,
+                        y_train=target_train,
                         MLFLow=False,
                     )
                     output[model] = model_pipe
             
             except NameError or ValueError:
                 pass
-
-    return output
+    
+    if not MFLOW:
+        return output
 
 
 
@@ -495,12 +512,19 @@ def main(data):
 
 if __name__ == "__main__":
 
-    path = Path(__file__).parent
-    path_data = os.path.join(path, "data/Filtered_Data2.parquet")
+    load_dotenv()
 
-    # hard coded path
-    # path_data = "/home/heiko/Repos/SKlearn_to_MLFLow/data/Filtered_Data2.parquet"
+    local_run = os.getenv("LOCAL_RUN", False)
 
+    if local_run:
+        # path_data = "/home/heiko/Repos/SKlearn_to_MLFLow/data/Filtered_Data2.parquet"
+
+        path = Path(__file__).parent
+        path_data = os.path.join(path, "data/Filtered_Data2.parquet")
+
+    else: 
+
+        path_dat = OS.GETENV("DATA_PATH", "/data/Filtered_Data2.parquet")
 
     data = pd.read_parquet(
         path_data
