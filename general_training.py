@@ -258,7 +258,7 @@ def convert_list_to_dict(list_of_dicts):
 
 def main(data):
 
-    output={}
+    output_models={}
 
     path = Path(__file__).parent
     configuration = read_configuration(
@@ -408,7 +408,7 @@ def main(data):
                     y_train=target_train,
                     MLFLow=False,
                 )
-                output[model] = model_pipe
+                output_models[model] = model_pipe
 
     for model in keys_in_list_of_dicts(list_of_dicts = configuration["EnsembledModel"]):
 
@@ -498,13 +498,13 @@ def main(data):
                         y_train=target_train,
                         MLFLow=False,
                     )
-                    output[model] = model_pipe
+                    output_models[model] = model_pipe
             
             except NameError or ValueError:
                 pass
     
-    if not MLFLOW:
-        return output
+    if not MLFlow:
+        return output_models
 
 
 

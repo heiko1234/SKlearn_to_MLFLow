@@ -34,10 +34,10 @@ test_split:
 
 
 Model:
-  #- "Lin_Reg"
+  - "Lin_Reg"
   - "Ridge"
   - "RandomForestRegressor"
-  #- "DecisionTreeRegressor"
+  - "DecisionTreeRegressor"
 
 EnsembledModel:
   - AdaboostRegression:
