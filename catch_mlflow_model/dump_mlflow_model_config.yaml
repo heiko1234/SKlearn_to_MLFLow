@@ -1,0 +1,9 @@
+
+
+
+
+local_path: "/home/heiko/Repos/SKlearn_to_MLFLow/model_dump"
+
+model_list: 
+  - "dashapp_model"
+
