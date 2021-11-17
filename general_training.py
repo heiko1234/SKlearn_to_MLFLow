@@ -55,10 +55,8 @@ sklearn_models_dict = {
     "RandomForestRegressor": RandomForestRegressor(),
     "Lin_Reg": LinearRegression(),
     "Ridge": Ridge(),
-    "AdaBoostRegressor": AdaBoostRegressor()
+    "AdaBoostRegressor": AdaBoostRegressor(),
 }
-
-
 
 
 scaler_dict = {
@@ -92,7 +90,7 @@ def replace_infs(df, with_value=np.nan):
 
 
 def drop_nans(df: pd.DataFrame, axis=0):
-    
+
     return df.dropna(axis)
 
 
@@ -172,25 +170,29 @@ def evaluate(sk_model, x_test, y_test, x_train, y_train, MLFLow=False):
         mlflow.log_metric("eval_kfold", eval_kfold)
 
 
-def make_model_pipeline(sk_model, sk_model2=None, scaler=None, parameter_model=None, parameter_model2=None):
+def make_model_pipeline(
+    sk_model,
+    sk_model2=None,
+    scaler=None,
+    parameter_model=None,
+    parameter_model2=None,
+):
 
-    if sk_model2 != None:
+    if sk_model2 is not None:
         sk_model_out = sk_model
-        sk_model_out.base_estimator=sk_model2
+        sk_model_out.base_estimator = sk_model2
 
         sk_model_out.base_estimator.set_params(**parameter_model2)
         sk_model_out.set_params(**parameter_model)
 
-        
-
-    elif parameter_model != None:
+    elif parameter_model is not None:
 
         sk_model_out = sk_model
         sk_model_out.set_params(**parameter_model)
-    
+
     else:
         sk_model_out = sk_model
-    
+
     print(f"{sk_model_out} was created")
 
     if scaler is not None:
@@ -198,7 +200,6 @@ def make_model_pipeline(sk_model, sk_model2=None, scaler=None, parameter_model=N
 
     else:
         return sk_model_out
-
 
 
 def create_data_dict(data):
@@ -217,6 +218,13 @@ def create_dict_of_modelparameter(model_parameter):
         for key in key_list:
             output[key] = element[key]
 
+    return output
+
+
+def create_feature_dtype_dict(data, pandas_dtypes):
+    output = {}
+    for element in data.columns:
+        output[element] = pandas_dtypes[str(data.dtypes[element])]
     return output
 
 
@@ -241,37 +249,37 @@ def flatten_list(list_list):
 
 
 def keys_in_list_of_dicts(list_of_dicts):
-    output=[]
+    output = []
     for element in list_of_dicts:
         output.append(list(element.keys())[0])
     return output
 
 
 def convert_list_to_dict(list_of_dicts):
-    output={}
+    output = {}
     keys = keys_in_list_of_dicts(list_of_dicts)
     for count, value in enumerate(keys):
-        output[keys[count]]= list_of_dicts[count][keys[count]]
+        output[keys[count]] = list_of_dicts[count][keys[count]]
     return output
-
 
 
 def main(data):
 
-    output_models={}
+    output_models = {}
 
     path = Path(__file__).parent
     configuration = read_configuration(
         configuration_file_path=os.path.join(path, "training_config.yaml")
     )
 
-    #configuration = read_configuration(configuration_file_path="/home/heiko/Repos/SKlearn_to_MLFLow/training_config.yaml")
+    # configuration = read_configuration(configuration_file_path="/home/heiko
+    # /Repos/SKlearn_to_MLFLow/training_config.yaml")
     # configuration
 
     MLFlow = configuration["MLFlow"]
     print(f"MLFlow: {MLFlow}")
 
-    #MLFlow = False
+    # MLFlow = False
 
     features = configuration["features"]
     target = configuration["target"]
@@ -303,6 +311,10 @@ def main(data):
         signature = ModelSignature(inputs=input_schema, outputs=output_schema)
 
         data_minmax_dict = create_data_dict(data)
+
+        feature_dtypes_dict = create_feature_dtype_dict(
+            data=feature_data, pandas_dtypes=pandas_dtypes
+        )
 
     # split in train and test data
     (
@@ -387,6 +399,9 @@ def main(data):
                     mlflow.log_dict(
                         model_parameter_dict, "model/model_parameters.json"
                     )
+                    mlflow.log_dict(
+                        feature_dtypes_dict, "model/feature_dtypes.json"
+                    )
 
                 mlflow.end_run()
 
@@ -410,27 +425,35 @@ def main(data):
                 )
                 output_models[model] = model_pipe
 
-    for model in keys_in_list_of_dicts(list_of_dicts = configuration["EnsembledModel"]):
+    for model in keys_in_list_of_dicts(
+        list_of_dicts=configuration["EnsembledModel"]
+    ):
 
         print(f"Used Ensemble Model: {model}")
 
-        dict_models= convert_list_to_dict(list_of_dicts = configuration["EnsembledModel_Parameter"])
+        dict_models = convert_list_to_dict(
+            list_of_dicts=configuration["EnsembledModel_Parameter"]
+        )
 
         for scaler in configuration["Scaler"]:
             print(f"Used scaler: {scaler} ")
 
-            try: 
+            try:
 
                 dict_enmodel = convert_list_to_dict(dict_models[model])
                 keys_of_enmodel = keys_in_list_of_dicts(dict_models[model])
 
-
-                make_model_pipeline(sk_model = sklearn_models_dict[keys_of_enmodel[0]], 
-                                    sk_model2=sklearn_models_dict[keys_of_enmodel[1]], 
-                                    scaler=scaler_dict[scaler], 
-                                    parameter_model=create_dict_of_modelparameter(model_parameter = dict_enmodel[keys_of_enmodel[0]]), 
-                                    parameter_model2=create_dict_of_modelparameter(model_parameter = dict_enmodel[keys_of_enmodel[1]])
-                                    )
+                make_model_pipeline(
+                    sk_model=sklearn_models_dict[keys_of_enmodel[0]],
+                    sk_model2=sklearn_models_dict[keys_of_enmodel[1]],
+                    scaler=scaler_dict[scaler],
+                    parameter_model=create_dict_of_modelparameter(
+                        model_parameter=dict_enmodel[keys_of_enmodel[0]]
+                    ),
+                    parameter_model2=create_dict_of_modelparameter(
+                        model_parameter=dict_enmodel[keys_of_enmodel[1]]
+                    ),
+                )
 
                 if MLFlow:
 
@@ -469,13 +492,18 @@ def main(data):
                         mlflow.set_tag("target", configuration["target"])
                         mlflow.set_tag("features", configuration["features"])
 
-                        mlflow.set_tag("model_parameters", model_parameter_dict)
+                        mlflow.set_tag(
+                            "model_parameters", model_parameter_dict
+                        )
 
                         mlflow.log_dict(
                             data_minmax_dict, "model/feature_limits.json"
                         )
                         mlflow.log_dict(
                             model_parameter_dict, "model/model_parameters.json"
+                        )
+                        mlflow.log_dict(
+                            feature_dtypes_dict, "model/feature_dtypes.json"
                         )
 
                     mlflow.end_run()
@@ -499,15 +527,12 @@ def main(data):
                         MLFLow=False,
                     )
                     output_models[model] = model_pipe
-            
+
             except NameError or ValueError:
                 pass
-    
+
     if not MLFlow:
         return output_models
-
-
-
 
 
 if __name__ == "__main__":
@@ -517,20 +542,16 @@ if __name__ == "__main__":
     local_run = os.getenv("LOCAL_RUN", False)
 
     if local_run:
-        # path_data = "/home/heiko/Repos/SKlearn_to_MLFLow/data/Filtered_Data2.parquet"
+        # path_data = "/home/heiko/Repos/SKlearn_to_MLFLow
+        # /data/Filtered_Data2.parquet"
 
         path = Path(__file__).parent
         path_data = os.path.join(path, "data/Filtered_Data2.parquet")
 
-    else: 
+    else:
 
         path_dat = os.GETENV("DATA_PATH", "/data/Filtered_Data2.parquet")
 
-    data = pd.read_parquet(
-        path_data
-    )
+    data = pd.read_parquet(path_data)
 
     main(data)
-
-
-

@@ -1,0 +1,19 @@
+artifact_path: model
+flavors:
+  python_function:
+    env: conda.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    python_version: 3.8.10
+  sklearn:
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.0.1
+run_id: b146afa153a540a0bdb4523375f8240c
+signature:
+  inputs: '[{"name": "ManufacturingProcess09", "type": "float"}, {"name": "ManufacturingProcess32",
+    "type": "integer"}, {"name": "ManufacturingProcess13", "type": "float"}, {"name":
+    "BiologicalMaterial02", "type": "float"}, {"name": "ManufacturingProcess20", "type":
+    "integer"}, {"name": "ManufacturingProcess22", "type": "float"}]'
+  outputs: '[{"type": "float"}]'
+utc_time_created: '2021-11-17 20:30:20.868781'
