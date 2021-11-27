@@ -1,7 +1,7 @@
 # Trainings_config.yaml
 
 
-data_load: "/home/heiko/Repos/SKLearn_to_MLFlow/data/Filtered_Data.parquet"
+data_load: "/home/heiko/Repos/SKlearn_to_MLFLow/data/ChemicalManufacturingProcess.parquet"
 
 
 
