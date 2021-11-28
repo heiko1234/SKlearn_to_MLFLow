@@ -1,9 +1,0 @@
-
-#Start Docker UI / Docker Host
-
-# Start Docker container: cd docker_train_model
-
-docker build -t sklearn_to_mlflow .
-
-docker run -dp -dp 8050:8050 sklearn_to_mlflow
-
