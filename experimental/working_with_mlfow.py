@@ -303,3 +303,10 @@ model= get_mlflow_model(model_name="dashapp_model", azure=True, model_dir = None
 model.predict(data)  #39.51
 model.predict(data2)  #39.51
 model.predict(data3)  #39.51
+
+
+
+
+# azure mlflow.pyfunc.load_model()
+# model= get_mlflow_model(model_name="MFI_polymer", azure=True, model_dir = None)
+
