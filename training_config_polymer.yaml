@@ -1,0 +1,86 @@
+# Trainings_config.yaml
+
+
+data_load: "/home/heiko/Repos/data_science_tutorials/polymer_process_improvement/data/CrisisTeamData.parquet"
+
+
+
+###########
+# Target: #
+###########
+
+
+target: "MFI"
+
+features:
+  - "M%"
+  - "Xf"
+  - "SA"
+  - "SASA"
+  - "XfXf"
+
+
+
+
+MLFlow: True # False #True
+
+MLFlow_Experiment: "Polymer_model"
+
+
+test_split:
+  test_size: 0.2
+  random_state: 2021
+
+
+
+Model:
+  - "Lin_Reg"
+  - "Ridge"
+  - "RandomForestRegressor"
+  - "DecisionTreeRegressor"
+
+EnsembledModel:
+  - AdaboostRegression:
+    - "AdaBoostRegressor"
+    - "DecisionTreeRegressor"
+
+
+
+Ridge:
+  - "alpha": 0.6
+
+
+RandomForestRegressor:
+  - "n_estimators": 150
+  - "max_features": 2
+  - "bootstrap":  True
+
+
+DecisionTreeRegressor:
+  - "max_depth": 10
+  #- "min_sample_split": 10
+  - "min_samples_leaf": 4
+
+
+EnsembledModel_Parameter:
+  - AdaboostRegression:
+    - AdaBoostRegressor: 
+      - n_estimators: 130
+      - learning_rate: 0.05
+    - DecisionTreeRegressor:
+      - max_leaf_nodes: 200
+      - min_samples_split: 50
+
+
+
+
+
+Scaler:
+  - "None"
+  - "MinMax"
+  - "Standard"
+
+
+
+
+

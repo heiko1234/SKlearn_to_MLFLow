@@ -244,13 +244,13 @@ def convert_list_to_dict(list_of_dicts):
 
 
 
-def main(data):
+def main(data, config_name="training_config.yaml" ):
 
     output={}
 
     path = Path(__file__).parent
     configuration = read_configuration(
-        configuration_file_path=os.path.join(path, "training_config.yaml")
+        configuration_file_path=os.path.join(path, config_name)
     )
 
 
@@ -502,6 +502,7 @@ if __name__ == "__main__":
 
     path_p = Path(__file__).parent
     configuration = read_configuration(
+        #configuration_file_path=os.path.join(path_p, "training_config_polymer.yaml")
         configuration_file_path=os.path.join(path_p, "training_config.yaml")
     )
 
@@ -525,4 +526,5 @@ if __name__ == "__main__":
         path_data
     )
 
-    main(data)
+    #main(data, config_name="training_config_polymer.yaml")
+    main(data, config_name="training_config.yaml")
