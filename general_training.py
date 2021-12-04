@@ -500,10 +500,14 @@ if __name__ == "__main__":
     local_run = os.getenv("LOCAL_RUN", False)
     print(f"Local run: {local_run}")
 
+    config_file_name = "training_config.yaml"
+    # config_file_name = "training_config_polymer.yaml"
+
+
     path_p = Path(__file__).parent
     configuration = read_configuration(
         #configuration_file_path=os.path.join(path_p, "training_config_polymer.yaml")
-        configuration_file_path=os.path.join(path_p, "training_config.yaml")
+        configuration_file_path=os.path.join(path_p, config_file_name)
     )
 
     if local_run == True or local_run == "True":
@@ -527,4 +531,4 @@ if __name__ == "__main__":
     )
 
     #main(data, config_name="training_config_polymer.yaml")
-    main(data, config_name="training_config.yaml")
+    main(data, config_name=config_file_name)
