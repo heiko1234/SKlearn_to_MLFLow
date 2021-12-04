@@ -10,7 +10,7 @@ data_load: "/home/heiko/Repos/data_science_tutorials/polymer_process_improvement
 ###########
 
 
-target: "MFI"
+target: "CI" # "MFI"
 
 features:
   - "M%"
@@ -29,7 +29,7 @@ MLFlow_Experiment: "Polymer_model"
 
 
 test_split:
-  test_size: 0.2
+  test_size: 0.1
   random_state: 2021
 
 
@@ -60,17 +60,17 @@ RandomForestRegressor:
 DecisionTreeRegressor:
   - "max_depth": 10
   #- "min_sample_split": 10
-  - "min_samples_leaf": 4
+  - "min_samples_leaf": 6
 
 
 EnsembledModel_Parameter:
   - AdaboostRegression:
     - AdaBoostRegressor: 
-      - n_estimators: 130
+      - n_estimators: 200
       - learning_rate: 0.05
     - DecisionTreeRegressor:
       - max_leaf_nodes: 200
-      - min_samples_split: 50
+      - min_samples_split: 2
 
 
 
