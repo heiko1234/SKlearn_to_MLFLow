@@ -1,7 +1,7 @@
 # Trainings_config.yaml
 
 
-data_load: "/home/heiko/Repos/data_science_tutorials/polymer_process_improvement/data/CrisisTeamData.parquet"
+data_load: "/home/heiko/Repos/data_science_tutorials/polymer_process_improvement/data/VSSTeamData.parquet"
 
 
 
@@ -10,7 +10,7 @@ data_load: "/home/heiko/Repos/data_science_tutorials/polymer_process_improvement
 ###########
 
 
-target: "CI" # "MFI"
+target:  "MFI" #"CI" # "MFI"
 
 features:
   - "M%"
@@ -19,6 +19,7 @@ features:
   - "SASA"
   - "SASASA"
   - "XfXf"
+  #- "XfXfXf"
 
 
 

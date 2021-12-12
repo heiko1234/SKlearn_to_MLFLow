@@ -491,7 +491,7 @@ def main(data, config_name="training_config.yaml" ):
                 pass
 
     if not MLFlow:
-        return output_models
+        return output
 
 
 if __name__ == "__main__":

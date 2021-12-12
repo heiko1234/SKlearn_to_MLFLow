@@ -15,6 +15,10 @@ import numpy as np
 import os
 import json
 import copy
+import mlflow
+
+from azure.storage.blob import BlobServiceClient
+
 
 from dash import dcc as dcc
 
@@ -27,46 +31,78 @@ container_name = os.getenv("BLOB_MODEL_CONTAINER_NAME")
 
 
 
-mlflow_dtypes = {
-    "float": "float32",
-    "integer": "int32",
-    "boolean": "bool",
-    "double": "double",
-    "string": "object",
-    "binary": "binary",
-}
-
-
-
-def get_mlflow_model(model_name, azure=True, model_dir = "/model/"):
+def get_mlflow_model(model_name, azure=True, local_model_dir = "/model/"):
 
     if azure:
-        model_dir = os.getenv("MLFLOW_MODEL_DIRECTORY", "models:/")
+        azure_model_dir = os.getenv("MLFLOW_MODEL_DIRECTORY", "models:/")
         model_stage = os.getenv("MLFLOW_MODEL_STAGE", "Staging")
-        artifact_path = PurePosixPath(model_dir).joinpath(model_name, model_stage)
+        artifact_path = PurePosixPath(azure_model_dir).joinpath(model_name, model_stage)
         artifact_path
 
         model = mlflow.pyfunc.load_model(str(artifact_path))
         print(f"Model {model_name} loaden from Azure: {artifact_path}")
 
     if not azure:
-        model = pickle.load(open(f"{model_dir}/{model_name}/model.pkl", 'rb'))
+        model = pickle.load(open(f"{local_model_dir}/{model_name}/model.pkl", 'rb'))
         print(f"Model {model_name} loaded from local pickle file")
 
     return model
 
 
+def read_model_json_from_blob(connection_string, container_name, model_name, filename):
+    # get mlflow model directory in blob: "models:/""
+    model_dir = os.getenv("MLFLOW_MODEL_DIRECTORY", "models:")
+    # get stage: "Staging"
+    model_stage = os.getenv("MLFLOW_MODEL_STAGE", "Staging")
+    # get artifact path of mode with model_name on Stage: "Staging"
+    artifact_path = PurePosixPath(model_dir).joinpath(model_name, model_stage)
+    # load that model
+    model = mlflow.pyfunc.load_model(str(artifact_path))
+    # get the loaded model runid
+    model_id=model.metadata.run_id
+    
+    client = BlobServiceClient.from_connection_string(
+        connection_string
+    )
+    # container blob client to container of mlflow
+    container_client = client.get_container_client(container_name)
+
+    # create file client for blob with a specific filename, of staged model
+
+    for blob in container_client.list_blobs():
+        if model_id in blob.name and filename in blob.name:
+
+            f_client = client.get_blob_client(
+                container=container_name, blob=blob.name
+            )
+    
+    tempfile = os.path.join("temp.json")
+    # dir_to_create = "".join(tempfile.split("/")[0:-1])
+    # make folder path if it does not exist
+    # os.makedirs(dir_to_create, exist_ok=True)
+
+    with open(tempfile, "wb") as file:
+        blob_data = f_client.download_blob()
+        blob_data.readinto(file)
+
+    try: 
+        return json.loads(open(tempfile, "r").read())
+    finally:
+        # finally remove temporary file
+        Path(tempfile).unlink()
+
+
 def get_model_json_artifact(
-    local=True,
+    azure=True,
     path=None,
-    model_path="models",
     model_name=None,
     features="feature_dtypes.json",
 ):
-    """This function loads json file form a dumped mlflow model
+    """This function loads json file form a dumped mlflow model or
+    temporary dumps it to load it directly from azure / azurite
 
     Args:
-        local (bool, optional): [description]. Defaults to True.
+        azure (bool, optional): [description]. Defaults to True.
         path ([type], optional): in docker: "/model/", else folder where models are saved.
         model_path (str, optional): [description]. Defaults to "models".
         model_name ([type], optional): [sklearn model name]. Defaults to None.
@@ -76,18 +112,22 @@ def get_model_json_artifact(
         [type]: [json file]
     """
 
-    if local:
-        if path is None:
-            path = Path(__file___).parent
-            # print(f"Parentspath: {path}")
-    if not local:
+    if not azure:
         # Access the artifacts to "/model/model_name/file" for the docker.
         path = "/model/"
-        model_path = ""
 
-    path_load = os.path.join(path, model_path, model_name, features)
+        path_load = os.path.join(path, model_name, features)
 
-    return json.loads(open(path_load, "r").read())
+        return json.loads(open(path_load, "r").read())
+    
+    if azure:
+        connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        container_name = os.getenv("BLOB_MODEL_CONTAINER_NAME")
+
+        return read_model_json_from_blob(connection_string=connection_string, 
+                        container_name=container_name, 
+                        model_name=model_name, 
+                        filename=features)
 
 
 def create_all_model_json_dict(local=True,
@@ -160,7 +200,17 @@ def create_warning(TAG_limit_dict, key, value, digits=2):
         return None
 
 
-def transform_df_to_mlflow_df(data, dtype_dict, mlflow_dtypes):
+def decode_df_mlflow_dtype(data, dtype_dict):
+
+    mlflow_dtypes = {
+        "float": "float32",
+        "integer": "int32",
+        "boolean": "bool",
+        "double": "double",
+        "string": "object",
+        "binary": "binary",
+    }
+
     for element in list(dtype_dict.keys()):
         try:
             data[element] = data[element].astype(
@@ -173,11 +223,27 @@ def transform_df_to_mlflow_df(data, dtype_dict, mlflow_dtypes):
 
 
 
+MFI_dtypes =get_model_json_artifact(
+            azure=True,
+            path=None,
+            model_name="MFI_model",
+            features="feature_dtypes.json",
+        )
+
+
+limits = read_model_json_from_blob(connection_string=connection_string, 
+                container_name=container_name, 
+                model_name = "CI_polymer", 
+                filename="feature_limits.json")
+
+
+limits
+
+
 # Feature Limit Dict 
 
 feature_limits_dict = create_all_model_json_dict(local=True,
-    path="/home/heiko/Repos/SKlearn_to_MLFLow",
-    model_path="model_dump",
+    path="/home/heiko/Repos/SKlearn_to_MLFLow/model_dump",
     features="feature_limits.json")
 feature_limits_dict
 
@@ -282,9 +348,9 @@ data3
 
 # Change data dtypes
 
-data = transform_df_to_mlflow_df(data = data, dtype_dict=dtype_dict, mlflow_dtypes=mlflow_dtypes)
-data2 = transform_df_to_mlflow_df(data = data2, dtype_dict=dtype_dict, mlflow_dtypes=mlflow_dtypes)
-data3 = transform_df_to_mlflow_df(data = data3, dtype_dict=dtype_dict, mlflow_dtypes=mlflow_dtypes)
+data = decode_df_mlflow_dtype(data = data, dtype_dict=dtype_dict)
+data2 = decode_df_mlflow_dtype(data = data2, dtype_dict=dtype_dict)
+data3 = decode_df_mlflow_dtype(data = data3, dtype_dict=dtype_dict)
 
 
 # Load a MLFlow Model either from local artifact or from MLFlow Docker container
