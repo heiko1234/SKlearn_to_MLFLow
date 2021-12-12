@@ -28,7 +28,7 @@ load_dotenv()
 local_run = os.getenv("LOCAL_RUN", False)
 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 container_name = os.getenv("BLOB_MODEL_CONTAINER_NAME")
-
+container_name
 
 
 def get_mlflow_model(model_name, azure=True, local_model_dir = "/model/"):
@@ -71,25 +71,29 @@ def read_model_json_from_blob(connection_string, container_name, model_name, fil
 
     for blob in container_client.list_blobs():
         if model_id in blob.name and filename in blob.name:
+            # print(blob.name)
 
             f_client = client.get_blob_client(
                 container=container_name, blob=blob.name
             )
     
-    tempfile = os.path.join("temp.json")
-    # dir_to_create = "".join(tempfile.split("/")[0:-1])
-    # make folder path if it does not exist
-    # os.makedirs(dir_to_create, exist_ok=True)
+            tempfile = os.path.join("temp.json")
+            # dir_to_create = "".join(tempfile.split("/")[0:-1])
+            # make folder path if it does not exist
+            # os.makedirs(dir_to_create, exist_ok=True)
 
-    with open(tempfile, "wb") as file:
-        blob_data = f_client.download_blob()
-        blob_data.readinto(file)
+            with open(tempfile, "wb") as file:
+                blob_data = f_client.download_blob()
+                blob_data.readinto(file)
 
-    try: 
-        return json.loads(open(tempfile, "r").read())
-    finally:
-        # finally remove temporary file
-        Path(tempfile).unlink()
+            try: 
+                return json.loads(open(tempfile, "r").read())
+            # except BaseException:
+            #    print(f"seem to be no file: {filename} in blob: {container_name} available")
+            finally:
+                # finally remove temporary file
+                Path(tempfile).unlink()
+
 
 
 def get_model_json_artifact(
@@ -114,7 +118,6 @@ def get_model_json_artifact(
 
     if not azure:
         # Access the artifacts to "/model/model_name/file" for the docker.
-        path = "/model/"
 
         path_load = os.path.join(path, model_name, features)
 
@@ -124,27 +127,46 @@ def get_model_json_artifact(
         connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
         container_name = os.getenv("BLOB_MODEL_CONTAINER_NAME")
 
-        return read_model_json_from_blob(connection_string=connection_string, 
+        file = read_model_json_from_blob(connection_string=connection_string, 
                         container_name=container_name, 
                         model_name=model_name, 
                         filename=features)
+        if file: 
+            return file
+        else: 
+            print(f"Warning: seem to be no file: {features} in blob: {container_name} available")
+
 
 
 def create_all_model_json_dict(local=True,
     path=None,
-    model_path="models",
-    features="feature_dtypes.json"):
+    model_path=None,
+    features="feature_dtypes.json",
+    list_of_models=None):
+
     output = {}
-    folderpath = os.path.join(path, model_path)
-    for folder in os.listdir(folderpath):
-        if os.path.isdir(os.path.join(folderpath, folder)):
-            output[folder] = get_model_json_artifact(
-                            local=local,
-                            path=path,
-                            model_path=model_path,
-                            model_name=folder,
-                            features=features,
-                        )
+    if local: 
+        if model_path:
+            folderpath = os.path.join(path, model_path)
+        else:
+            folderpath = path
+        for folder in os.listdir(folderpath):
+            if os.path.isdir(os.path.join(folderpath, folder)):
+                output[folder] = get_model_json_artifact(
+                                azure=False,
+                                path=folderpath,
+                                model_name=folder,
+                                features=features,
+                            )
+
+    if not local and list_of_models:
+        for modelname in list_of_models:
+            output[modelname]=get_model_json_artifact(
+                                    azure=True,
+                                    path=None,
+                                    model_name=modelname,
+                                    features=features,
+                                )
     return output
 
 
@@ -221,14 +243,19 @@ def decode_df_mlflow_dtype(data, dtype_dict):
     return data
 
 
+#####
+####
+
 
 
 MFI_dtypes =get_model_json_artifact(
             azure=True,
             path=None,
-            model_name="MFI_model",
+            model_name="MFI_polymer",
             features="feature_dtypes.json",
         )
+
+MFI_dtypes
 
 
 limits = read_model_json_from_blob(connection_string=connection_string, 
@@ -244,7 +271,17 @@ limits
 
 feature_limits_dict = create_all_model_json_dict(local=True,
     path="/home/heiko/Repos/SKlearn_to_MLFLow/model_dump",
+    model_path=None,
     features="feature_limits.json")
+feature_limits_dict
+
+
+
+feature_limits_dict = create_all_model_json_dict(local=False,
+    path=None,
+    model_path=None,
+    features="feature_limits.json",
+    list_of_models=["MFI_polymer", "CI_polymer"])
 feature_limits_dict
 
 
@@ -269,20 +306,50 @@ create_warning(TAG_limit_dict=TAG_limit_dict, key = "ManufacturingProcess42", va
 
 # Feature dtype Dict
 
-
+# if very thing is locally dumped
 get_model_json_artifact(
-    local=True,
-    path="/home/heiko/Repos/SKlearn_to_MLFLow",
-    model_path="model_dump",
+    azure=False,
+    path="/home/heiko/Repos/SKlearn_to_MLFLow/model_dump",
     model_name="dashapp_model",
     features="feature_dtypes.json",
 )
 
 
 feature_dtypes_dict = create_all_model_json_dict(local=True,
-    path="/home/heiko/Repos/SKlearn_to_MLFLow",
-    model_path="model_dump",
+    path="/home/heiko/Repos/SKlearn_to_MLFLow/model_dump",
     features="feature_dtypes.json")
+feature_dtypes_dict
+
+
+# if every thing is n mlflow server, azurite
+model2_featues=get_model_json_artifact(
+                    azure=True,
+                    path=None,
+                    model_name="dashapp_model2",
+                    features="feature_limits.json",
+                )
+model2_featues
+
+
+model2_dtypes=get_model_json_artifact(
+                    azure=True,
+                    path=None,
+                    model_name="dashapp_model2",
+                    features="feature_dtype.json",
+                )
+model2_dtypes
+
+
+feature_dtypes_dict = create_all_model_json_dict(local=True,
+    path="/home/heiko/Repos/SKlearn_to_MLFLow/model_dump",
+    features="feature_dtypes.json")
+feature_dtypes_dict
+
+
+feature_dtypes_dict = create_all_model_json_dict(local=False,
+    list_of_models=["CI_polymer", "MFI_polymer"],
+    features="feature_dtypes.json")
+# feature_dtypes_dict = None
 feature_dtypes_dict
 
 
@@ -315,6 +382,7 @@ data = pd.DataFrame(
     ],
 )
 data
+data.dtypes
 
 # same parameter but different order
 data2 = pd.DataFrame(
@@ -352,6 +420,9 @@ data = decode_df_mlflow_dtype(data = data, dtype_dict=dtype_dict)
 data2 = decode_df_mlflow_dtype(data = data2, dtype_dict=dtype_dict)
 data3 = decode_df_mlflow_dtype(data = data3, dtype_dict=dtype_dict)
 
+data
+dtype_dict
+data.dtypes
 
 # Load a MLFlow Model either from local artifact or from MLFlow Docker container
 
