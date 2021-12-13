@@ -49,7 +49,7 @@ def all_run_ids(model_names):
     output = {}
     for model in model_names:
         try:
-            model_id = get_mlflow_model(model_name="dashapp_model").metadata.run_id
+            model_id = get_mlflow_model(model_name=model).metadata.run_id
             output[model] = model_id
         except:
             continue
