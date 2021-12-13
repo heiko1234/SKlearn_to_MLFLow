@@ -13,12 +13,17 @@ RUN mkdir -p /usr/app/script/
 RUN mkdir -p /usr/data/
 
 
+# COPY THE DATA
+COPY /data/ChemicalManufacturingProcess.parquet /usr/data/
+
+# COPY Files
 COPY /docker_train_model/script/ /usr/app/script/
 COPY /docker_train_model/.env /usr/app/
-COPY /data/ChemicalManufacturingProcess.parquet /usr/data/
+# COPY POETRY THINGS
+COPY /docker_train_model/poetry.toml /usr/app/
 COPY /pyproject.toml /usr/app/
 COPY /poetry.lock /usr/app/
-COPY /docker_train_model/poetry.toml /usr/app/
+# COPY TRAINING SCRIPT
 COPY /general_training.py /usr/app/script/
 COPY /training_config.yaml /usr/app/script/
 

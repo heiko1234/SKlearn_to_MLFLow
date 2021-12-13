@@ -9,7 +9,7 @@ import pickle
 import mlflow
 
 import pandas as pd
-import numpy as np
+# import numpy as np
 
 # import logging
 import os
@@ -95,7 +95,6 @@ def read_model_json_from_blob(connection_string, container_name, model_name, fil
                 Path(tempfile).unlink()
 
 
-
 def get_model_json_artifact(
     azure=True,
     path=None,
@@ -135,7 +134,6 @@ def get_model_json_artifact(
             return file
         else: 
             print(f"Warning: seem to be no file: {features} in blob: {container_name} available")
-
 
 
 def create_all_model_json_dict(local=True,
@@ -257,13 +255,19 @@ MFI_dtypes =get_model_json_artifact(
 
 MFI_dtypes
 
+MFI_limits =get_model_json_artifact(
+            azure=True,
+            path=None,
+            model_name="MFI_polymer",
+            features="feature_limits.json",
+        )
+MFI_limits
+
 
 limits = read_model_json_from_blob(connection_string=connection_string, 
                 container_name=container_name, 
                 model_name = "CI_polymer", 
                 filename="feature_limits.json")
-
-
 limits
 
 
@@ -358,7 +362,7 @@ dtype_dict
 
 
 
-
+# Data for Model: 
 # Create a pd.DataFrame
 
 MP09 = 40  #38.89..49.36
@@ -446,4 +450,47 @@ model.predict(data3)  #39.51
 
 # azure mlflow.pyfunc.load_model()
 # model= get_mlflow_model(model_name="MFI_polymer", azure=True, model_dir = None)
+
+
+
+# Data for MFI & CI polymer model
+# an efficient way to use MLflow to make predicitons and 
+
+
+M_per = 2  # 0-3.67
+Xf = 15  # 13.45 - 18.4
+SA = 61.2 #52 - 79.7
+
+
+def create_polymer_data(M_per, Xf, SA):
+    SASA = SA**2
+    SASASA = SA**3
+    XfXf = Xf**2
+    XfXfXf = Xf**3
+    return pd.DataFrame(
+        data=[[M_per, Xf, SA, SASA, SASASA, XfXf, XfXfXf]],
+            columns=["M%", "Xf", "SA", "SASA", "SASASA", "XfXf", "XfXfXf"],
+        )
+
+
+polymer_data = create_polymer_data(M_per = 2, Xf = 15, SA = 61.2)
+polymer_data
+
+
+load_dotenv()
+local_run = os.getenv("LOCAL_RUN", False)
+
+get_model_json_artifact(model_name= "MFI_polymer", features="feature_dtypes.json")
+get_model_json_artifact(model_name= "MFI_polymer", features="feature_limits.json")
+
+polymer_data_decoded = decode_df_mlflow_dtype(data = polymer_data, dtype_dict=get_model_json_artifact(model_name= "MFI_polymer", features="feature_dtypes.json"))
+polymer_data_decoded.dtypes
+
+MFI_model= get_mlflow_model(azure=True, model_name="MFI_polymer")
+
+MFI_model.predict(polymer_data_decoded)
+
+
+create_warning(TAG_limit_dict=get_model_json_artifact(model_name= "MFI_polymer", features="feature_limits.json"), key = "M%", value=4) #yes
+create_warning(TAG_limit_dict=get_model_json_artifact(model_name= "MFI_polymer", features="feature_limits.json"), key = "M%", value=2) #no
 
