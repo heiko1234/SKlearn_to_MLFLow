@@ -1,6 +1,7 @@
 
 
 # from os import getenv
+from lib2to3.pytree import Base
 from dotenv import load_dotenv
 
 from pathlib import PurePosixPath
@@ -28,9 +29,14 @@ from dash import dcc as dcc
 load_dotenv()
 
 local_run = os.getenv("LOCAL_RUN", False)
-connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-container_name = os.getenv("BLOB_MODEL_CONTAINER_NAME")
+try:
+    connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    container_name = os.getenv("BLOB_MODEL_CONTAINER_NAME")
+except BaseException:
+    connection_string= os.environ["AZURE_STORAGE_CONNECTION_STRING"]
+    container_name = os.environ["BLOB_MODEL_CONTAINER_NAME"]
 container_name
+connection_string
 
 
 def get_mlflow_model(model_name, azure=True, local_model_dir = "/model/"):
