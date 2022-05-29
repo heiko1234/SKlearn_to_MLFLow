@@ -339,7 +339,7 @@ feature_dtypes_dict = create_all_model_json_dict(local=True,
 feature_dtypes_dict
 
 
-# if every thing is n mlflow server, azurite
+# if everything is n mlflow server, azurite
 model2_featues=get_model_json_artifact(
                     azure=True,
                     path=None,
@@ -445,19 +445,19 @@ data.dtypes
 # Load a MLFlow Model either from local artifact or from MLFlow Docker container
 
 # local pickle file
-model= get_mlflow_model(model_name="dashapp_model", azure=False, model_dir = "/home/heiko/Repos/SKlearn_to_MLFLow/model_dump")
+model= get_mlflow_model(model_name="chemical_model", azure=False, local_model_dir = "./model_dump")
 
-model.predict(data)  #39.51
-model.predict(data2) #37.0
+model.predict(data)  #39.0
+model.predict(data2) #38.9
 model.predict(data3)  # error: 7 features instead 6
 
 
 # azure mlflow.pyfunc.load_model()
-model= get_mlflow_model(model_name="dashapp_model", azure=True, model_dir = None)
+model= get_mlflow_model(model_name="chemical_model", azure=True, local_model_dir = None)
 
-model.predict(data)  #39.51
-model.predict(data2)  #39.51
-model.predict(data3)  #39.51
+model.predict(data)  #39.1
+model.predict(data2)  #39.1
+model.predict(data3)  #39.1
 
 
 
