@@ -9,11 +9,11 @@ flavors:
     pickled_model: model.pkl
     serialization_format: cloudpickle
     sklearn_version: 1.0.1
-run_id: b146afa153a540a0bdb4523375f8240c
+run_id: 6c7fc139b8614f539c59b55073b6bc0d
 signature:
   inputs: '[{"name": "ManufacturingProcess09", "type": "float"}, {"name": "ManufacturingProcess32",
     "type": "integer"}, {"name": "ManufacturingProcess13", "type": "float"}, {"name":
     "BiologicalMaterial02", "type": "float"}, {"name": "ManufacturingProcess20", "type":
     "integer"}, {"name": "ManufacturingProcess22", "type": "float"}]'
   outputs: '[{"type": "float"}]'
-utc_time_created: '2021-11-17 20:30:20.868781'
+utc_time_created: '2022-05-27 20:44:30.141180'

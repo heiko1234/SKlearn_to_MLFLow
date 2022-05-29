@@ -1,0 +1,5 @@
+{
+  "n_estimators": 150,
+  "max_features": 2,
+  "bootstrap": true
+}

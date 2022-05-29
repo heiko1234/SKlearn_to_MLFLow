@@ -4,23 +4,23 @@
     "max": 49.36
   },
   "ManufacturingProcess32": {
-    "min": 150.0,
-    "max": 170.0
+    "min": 143.0,
+    "max": 173.0
   },
   "ManufacturingProcess13": {
     "min": 32.1,
     "max": 38.6
   },
   "BiologicalMaterial02": {
-    "min": 51.28,
+    "min": 46.87,
     "max": 64.75
   },
   "ManufacturingProcess20": {
-    "min": 4392.0,
+    "min": 0.0,
     "max": 4759.0
   },
   "ManufacturingProcess22": {
-    "min": 1.0,
+    "min": 0.0,
     "max": 12.0
   },
   "Yield": {

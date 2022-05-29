@@ -253,6 +253,12 @@ def decode_df_mlflow_dtype(data, dtype_dict):
 ####
 
 
+model= get_mlflow_model(model_name="chemical_model", azure=True)
+
+model.predict()
+
+
+
 
 MFI_dtypes =get_model_json_artifact(
             azure=True,
@@ -308,7 +314,7 @@ flatten_consolidate_dict(nested_dict = feature_limits_dict, take_lower_min=False
 
 
 TAG_limit_dict = flatten_consolidate_dict(nested_dict = feature_limits_dict, take_lower_min=True, take_higher_max=True)
-
+TAG_limit_dict
 
 create_warning(TAG_limit_dict=TAG_limit_dict, key = "ManufacturingProcess42", value=200) #yes
 create_warning(TAG_limit_dict=TAG_limit_dict, key = "ManufacturingProcess42", value=160) #no
@@ -318,11 +324,11 @@ create_warning(TAG_limit_dict=TAG_limit_dict, key = "ManufacturingProcess42", va
 
 # Feature dtype Dict
 
-# if very thing is locally dumped
+# if everything is locally dumped
 get_model_json_artifact(
     azure=False,
     path="/home/heiko/Repos/SKlearn_to_MLFLow/model_dump",
-    model_name="dashapp_model",
+    model_name="chemical_model",
     features="feature_dtypes.json",
 )
 
