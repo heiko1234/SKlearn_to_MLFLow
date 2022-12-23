@@ -500,8 +500,9 @@ if __name__ == "__main__":
     local_run = os.getenv("LOCAL_RUN", False)
     print(f"Local run: {local_run}")
 
-    # config_file_name = "training_config.yaml"
-    config_file_name = "training_config_polymer.yaml"
+    config_file_name = "training_config.yaml"
+    # config_file_name = "training_config_polymer.yaml"
+    # config_file_name = "training_config_rusted.yaml"
 
 
     path_p = Path(__file__).parent
